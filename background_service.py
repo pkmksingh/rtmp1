@@ -1,5 +1,5 @@
 import threading
-from rtmp_streamer import RTMPStreamer  # wrapper → actually ResilientStreamer
+from rtmp_streamer import RTMPStreamer
 
 class BackgroundService:
     def __init__(self):
@@ -7,16 +7,13 @@ class BackgroundService:
         self.stop_event = None
 
     def start(self, input_url, destinations):
-        """Start a new RTMP stream in the background"""
         if self.streamer:
-            self.stop()  # stop old one first
-
+            self.stop()
         self.stop_event = threading.Event()
         self.streamer = RTMPStreamer(input_url, destinations, self.stop_event)
         self.streamer.start()
 
     def stop(self):
-        """Stop the running stream"""
         if self.streamer and self.stop_event:
             self.stop_event.set()
             self.streamer.join(timeout=5)
