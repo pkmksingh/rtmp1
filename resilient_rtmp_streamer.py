@@ -11,8 +11,8 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(mess
 
 class ResilientStreamer(threading.Thread):
     """
-    Fetch a Twitch stream via Streamlink API and restream to multiple RTMP destinations using FFmpeg.
-    Automatically restarts if the stream or FFmpeg process fails.
+    Fetch Twitch stream via Streamlink API and restream to multiple RTMP destinations using FFmpeg.
+    Automatically restarts if the stream goes offline or FFmpeg fails.
     """
     def __init__(self, input_url: str, rtmp_destinations: List[str], stop_event: threading.Event):
         super().__init__(daemon=True)
@@ -25,21 +25,20 @@ class ResilientStreamer(threading.Thread):
         backoff = 1.0
         while not self.stop_event.is_set():
             try:
-                # Use Streamlink API to get HLS URL
+                # Check if Twitch stream is live
                 streams = streamlink.streams(self.input_url)
                 if "best" not in streams:
-                    logger.warning("No 'best' stream available yet, retrying...")
+                    logger.warning("Twitch stream not live. Retrying in %.1f seconds...", backoff)
                     time.sleep(backoff)
                     backoff = min(backoff * 2, 60)
                     continue
 
                 hls_url = streams["best"].to_url()
-                logger.info(f"Using HLS URL: {hls_url}")
+                logger.info("Found live Twitch stream: %s", hls_url)
 
-                # Build tee muxer for multiple RTMP destinations
+                # Build tee URL for multiple RTMP destinations
                 tee_url = "|".join(f"[f=flv]{d}" for d in self.destinations)
 
-                # Build FFmpeg command
                 cmd = [
                     "ffmpeg",
                     "-y",
@@ -57,10 +56,10 @@ class ResilientStreamer(threading.Thread):
                     tee_url
                 ]
 
-                logger.info(f"Starting FFmpeg: {cmd}")
+                logger.info("Starting FFmpeg for RTMP destinations: %s", self.destinations)
                 self.proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
 
-                # Read FFmpeg output
+                # Log FFmpeg output
                 while True:
                     if self.stop_event.is_set():
                         self._terminate_proc()
@@ -71,13 +70,13 @@ class ResilientStreamer(threading.Thread):
                         logger.info(line.strip())
 
                     if self.proc.poll() is not None:
-                        logger.warning("FFmpeg exited, will restart...")
+                        logger.warning("FFmpeg exited with code %s", self.proc.returncode)
                         break
 
                     time.sleep(0.1)
 
             except Exception as e:
-                logger.exception(f"Error in streaming loop: {e}")
+                logger.exception("Error in streaming loop: %s", e)
 
             finally:
                 self._terminate_proc()
@@ -85,7 +84,7 @@ class ResilientStreamer(threading.Thread):
             if self.stop_event.is_set():
                 break
 
-            logger.info(f"Restarting stream after backoff {backoff}s")
+            logger.info("Restarting stream after backoff %.1f seconds", backoff)
             time.sleep(backoff)
             backoff = min(backoff * 2, 60)
 
