@@ -11,7 +11,7 @@ restreams it to one or more RTMP destinations in real time.
 """
 )
 
-# --- Initialize Background Service ---
+# Initialize Background Service
 if "background_service" not in st.session_state:
     st.session_state.background_service = BackgroundService()
 
@@ -19,12 +19,9 @@ service = st.session_state.background_service
 
 # --- Twitch Stream Section ---
 st.header("⚡ Twitch Stream")
-
 st.markdown(
-    """
-Input stream is fixed to Twitch channel: `https://www.twitch.tv/randomtodaytv`
-You just need to enter your RTMP destination URLs.
-"""
+    "Input stream is fixed to Twitch channel: `https://www.twitch.tv/randomtodaytv`.\n"
+    "Enter your RTMP destination URLs below."
 )
 
 destinations_input = st.text_area(
@@ -49,7 +46,7 @@ with col2:
         service.stop()
         st.warning("⏹️ Twitch stream stopped.")
 
-# --- Stream Status ---
+# Stream Status
 st.header("ℹ️ Stream Status")
 if service.is_running():
     st.info("🔵 Twitch stream is running")
