@@ -65,7 +65,7 @@ class StreamManager:
                 cmd,
                 capture_output=True,
                 text=True,
-                timeout=10000000000000
+                timeout=0
             )
             
             if result.returncode == 0:
