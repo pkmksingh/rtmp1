@@ -1,7 +1,10 @@
 import threading
-from rtmp_streamer import RTMPStreamer
+from rtmp_streamer import RTMPStreamer  # wrapper → ResilientStreamer
 
 class BackgroundService:
+    """
+    Manages a single background Twitch stream.
+    """
     def __init__(self):
         self.streamer = None
         self.stop_event = None
