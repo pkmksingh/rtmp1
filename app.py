@@ -17,7 +17,7 @@ if "background_service" not in st.session_state:
 
 service = st.session_state.background_service
 
-# --- Twitch Stream Section ---
+# Twitch Stream Section
 st.header("⚡ Twitch Stream")
 st.markdown(
     "Input stream is fixed to Twitch channel: `https://www.twitch.tv/randomtodaytv`.\n"
