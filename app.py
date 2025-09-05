@@ -1,83 +1,58 @@
 import streamlit as st
-from stream_manager import StreamManager
 from background_service import BackgroundService
 
-st.set_page_config(page_title="RTMP Restreamer", layout="wide")
-
-# Initialize session state
-if "stream_manager" not in st.session_state:
-    st.session_state.stream_manager = StreamManager()
-
-if "background_service" not in st.session_state:
-    st.session_state.background_service = BackgroundService()
-
-st.title("📡 RTMP Restreamer App")
+st.set_page_config(page_title="Twitch RTMP Restreamer", layout="wide")
+st.title("📺 Twitch RTMP Restreamer")
 
 st.markdown(
     """
-This app accepts an **input stream URL** and restreams it to one or more RTMP destinations.  
-You can run multiple streams via the **Stream Manager**, or a single persistent stream via the **Background Service**.
+This app fetches the live feed from [Twitch](https://www.twitch.tv/randomtodaytv) and 
+restreams it to one or more RTMP destinations in real time.
 """
 )
 
-# --- Stream Manager Section ---
-st.header("🎛️ Stream Manager (Multiple Streams)")
+# --- Initialize Background Service ---
+if "background_service" not in st.session_state:
+    st.session_state.background_service = BackgroundService()
 
-with st.form("stream_form"):
-    stream_id = st.text_input("Stream ID (unique name)", value="stream1")
-    input_url = st.text_input("Input URL (HLS/RTMP source)")
-    destinations = st.text_area(
-        "Destination RTMP URLs (one per line)",
-        placeholder="rtmp://a/live/key\nrtmp://b/live/key",
-    )
-    submit = st.form_submit_button("Start Stream")
+service = st.session_state.background_service
 
-if submit:
-    if stream_id and input_url and destinations.strip():
-        dest_list = [d.strip() for d in destinations.splitlines() if d.strip()]
-        st.session_state.stream_manager.start_stream(stream_id, input_url, dest_list)
-        st.success(f"✅ Started stream `{stream_id}`")
-    else:
-        st.error("Please fill in all fields.")
+# --- Twitch Stream Section ---
+st.header("⚡ Twitch Stream")
 
-# Stop individual stream
-stop_id = st.text_input("Stream ID to stop", value="")
-if st.button("Stop Stream"):
-    if stop_id:
-        st.session_state.stream_manager.stop_stream(stop_id)
-        st.warning(f"⏹️ Stopped stream `{stop_id}`")
+st.markdown(
+    """
+Input stream is fixed to Twitch channel: `https://www.twitch.tv/randomtodaytv`
+You just need to enter your RTMP destination URLs.
+"""
+)
 
-# Stop all streams
-if st.button("Stop All Streams"):
-    st.session_state.stream_manager.stop_all()
-    st.warning("⏹️ All streams stopped.")
-
-# --- Background Service Section ---
-st.header("⚡ Background Service (Single Stream)")
-
-bg_input_url = st.text_input("Background Input URL (HLS/RTMP source)")
-bg_destinations = st.text_area(
-    "Background Destinations (one per line)",
-    placeholder="rtmp://a/live/key\nrtmp://b/live/key",
+destinations_input = st.text_area(
+    "Destination RTMP URLs (one per line)",
+    placeholder="rtmp://a/live/key\nrtmp://b/live/key"
 )
 
 col1, col2 = st.columns(2)
+
 with col1:
-    if st.button("Start Background Stream"):
-        if bg_input_url and bg_destinations.strip():
-            dest_list = [d.strip() for d in bg_destinations.splitlines() if d.strip()]
-            st.session_state.background_service.start(bg_input_url, dest_list)
-            st.success("✅ Background stream started")
+    if st.button("Start Twitch Stream"):
+        dest_list = [d.strip() for d in destinations_input.splitlines() if d.strip()]
+        if not dest_list:
+            st.error("Please enter at least one RTMP destination URL.")
         else:
-            st.error("Please enter input and destinations")
+            # Start Twitch stream
+            twitch_url = "https://www.twitch.tv/randomtodaytv"
+            service.start(twitch_url, dest_list)
+            st.success("✅ Twitch stream started!")
 
 with col2:
-    if st.button("Stop Background Stream"):
-        st.session_state.background_service.stop()
-        st.warning("⏹️ Background stream stopped")
+    if st.button("Stop Twitch Stream"):
+        service.stop()
+        st.warning("⏹️ Twitch stream stopped.")
 
-# Status
-if st.session_state.background_service.is_running():
-    st.info("🔵 Background stream is running")
+# --- Stream Status ---
+st.header("ℹ️ Stream Status")
+if service.is_running():
+    st.info("🔵 Twitch stream is running")
 else:
-    st.info("⚪ Background stream is not running")
+    st.info("⚪ Twitch stream is not running")
