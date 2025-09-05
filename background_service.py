@@ -10,11 +10,11 @@ class BackgroundService:
         self.streamer = None
         self.stop_event = None
 
-    def start(self, input_url, destinations):
+    def start(self, twitch_url, destinations):
         if self.streamer:
             self.stop()
         self.stop_event = threading.Event()
-        self.streamer = RTMPStreamer(input_url, destinations, self.stop_event)
+        self.streamer = RTMPStreamer(twitch_url, destinations, self.stop_event)
         self.streamer.start()
 
     def stop(self):
