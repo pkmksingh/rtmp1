@@ -1,5 +1,6 @@
 import threading
-from rtmp_streamer import RTMPStreamer  # wrapper → ResilientStreamer
+from rtmp_streamer import RTMPStreamer
+
 
 class BackgroundService:
     """
