@@ -6,7 +6,7 @@ st.title("📺 Twitch RTMP Restreamer")
 
 st.markdown(
     """
-This app fetches the live feed from [Twitch](https://www.twitch.tv/randomtodaytv) and 
+This app fetches the live feed from [Twitch](https://www.twitch.tv/randomtodaytv) and
 restreams it to one or more RTMP destinations in real time.
 """
 )
@@ -40,7 +40,6 @@ with col1:
         if not dest_list:
             st.error("Please enter at least one RTMP destination URL.")
         else:
-            # Start Twitch stream
             twitch_url = "https://www.twitch.tv/randomtodaytv"
             service.start(twitch_url, dest_list)
             st.success("✅ Twitch stream started!")
